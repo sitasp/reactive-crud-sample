@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,8 +32,8 @@ public class TutorialServiceImpl implements ITutorialService {
     }
 
     @Override
-    public Flux<Tutorial> findByTitleContaining(String title){
-        return tutorialRepository.findByTitleContaining(title);
+    public Flux<Tutorial> findByKeywordIgnoreCase(String keyword){
+        return tutorialRepository.findByKeywordIgnoreCase(keyword);
     }
 
     @Override
@@ -67,5 +68,11 @@ public class TutorialServiceImpl implements ITutorialService {
     @Override
     public Mono<Tutorial> create(Tutorial tutorial) {
         return save(tutorial);
+    }
+
+    @Override
+    public Flux<Tutorial> bulkCreate(List<Tutorial> tutorialList) {
+        return Flux.fromIterable(tutorialList)
+                .flatMap(tutorialRepository::save);
     }
 }

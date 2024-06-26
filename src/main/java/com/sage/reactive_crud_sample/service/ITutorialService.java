@@ -4,7 +4,7 @@ import com.sage.reactive_crud_sample.entity.Tutorial;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface ITutorialService {
     Flux<Tutorial> findAll();
@@ -13,7 +13,7 @@ public interface ITutorialService {
 
     Mono<Tutorial> save(Tutorial tutorial);
 
-    Flux<Tutorial> findByTitleContaining(String title);
+    Flux<Tutorial> findByKeywordIgnoreCase(String title);
 
     Mono<Tutorial> update(long id, Tutorial tutorial);
 
@@ -24,4 +24,6 @@ public interface ITutorialService {
     Flux<Tutorial> findByPublished(boolean isPublished);
 
     Mono<Tutorial> create(Tutorial tutorial);
+
+    Flux<Tutorial> bulkCreate(List<Tutorial> tutorialList);
 }

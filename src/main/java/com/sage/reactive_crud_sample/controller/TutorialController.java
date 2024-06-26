@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Objects;
 
 
@@ -20,11 +21,11 @@ public class TutorialController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Flux<Tutorial> getAllTutorials(@RequestParam(required = false, name = "title") String title){
-        if(Objects.isNull(title)){
+    public Flux<Tutorial> getAllTutorials(@RequestParam(required = false, name = "keyword") String keyword){
+        if(Objects.isNull(keyword)){
             return tutorialServiceImpl.findAll();
         }
-        return tutorialServiceImpl.findByTitleContaining(title);
+        return tutorialServiceImpl.findByKeywordIgnoreCase(keyword);
     }
 
     @GetMapping("/{id}")
@@ -37,6 +38,12 @@ public class TutorialController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<Tutorial> createTutorial(@RequestBody Tutorial tutorial){
         return tutorialServiceImpl.create(tutorial);
+    }
+
+    @PostMapping("/bulk/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Flux<Tutorial> createBulkTutorial(@RequestBody List<Tutorial> tutorialList){
+        return tutorialServiceImpl.bulkCreate(tutorialList);
     }
 
     @PutMapping("/update/{id}")
