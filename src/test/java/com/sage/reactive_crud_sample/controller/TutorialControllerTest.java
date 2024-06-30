@@ -2,6 +2,7 @@ package com.sage.reactive_crud_sample.controller;
 
 import com.sage.reactive_crud_sample.entity.Tutorial;
 import com.sage.reactive_crud_sample.repository.TutorialRepository;
+import com.sage.reactive_crud_sample.repository.UserRepository;
 import com.sage.reactive_crud_sample.service.TutorialServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -30,6 +31,9 @@ class TutorialControllerTest {
     @MockBean
     private TutorialRepository tutorialRepository;
 
+    @MockBean
+    private UserRepository userRepository;
+
     @InjectMocks
     private TutorialController tutorialController;
 
@@ -48,7 +52,7 @@ class TutorialControllerTest {
     }
 
     @Test
-    void getAllTutorials() {
+    void givenNoCredentials_whenGetAllTutorials_thenUnauthorized() {
         List<Tutorial> tutorialList = Arrays.asList(
                 new Tutorial(1L, "Spring", "Java Framework", true),
                 new Tutorial(2L, "Django", "Python Framework", true),
@@ -61,12 +65,42 @@ class TutorialControllerTest {
         webTestClient.get().uri("/api/tutorial")
                 .exchange()
                 .expectStatus()
+                .isUnauthorized();
+    }
+
+
+    @Test
+    void givenCredentials_whenGetAllTutorials_thenOk() {
+        List<Tutorial> tutorialList = Arrays.asList(
+                new Tutorial(1L, "Spring", "Java Framework", true),
+                new Tutorial(2L, "Django", "Python Framework", true),
+                new Tutorial(3L, "React", "JS Framework", true),
+                new Tutorial(4L, "laravel", "PHP Framework", true)
+        );
+
+        Mockito.when(tutorialRepository.findAll()).thenReturn(Flux.fromIterable(tutorialList));
+
+        webTestClient.get().uri("/api/tutorial")
+                .exchange()
+                .expectStatus()
                 .isOk()
                 .expectBodyList(Tutorial.class).isEqualTo(tutorialList);
     }
 
     @Test
-    void getTutorialById() {
+    void givenNoCredentials_whenGetTutorialById_thenUnauthorized() {
+        Tutorial tutorial = new Tutorial(1L, "Spring", "Java Framework", true);
+
+        Mockito.when(tutorialRepository.findById(1L)).thenReturn(Mono.just(tutorial));
+
+        webTestClient.get().uri("/api/tutorial/1")
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
+    }
+
+    @Test
+    void givenCredentials_whenGetTutorialById_thenOk() {
         Tutorial tutorial = new Tutorial(1L, "Spring", "Java Framework", true);
 
         Mockito.when(tutorialRepository.findById(1L)).thenReturn(Mono.just(tutorial));
@@ -79,7 +113,20 @@ class TutorialControllerTest {
     }
 
     @Test
-    void createTutorial() {
+    void givenNoCredentials_whenCreateTutorial_thenForbidden() {
+        Tutorial tutorial = new Tutorial(1L, "Spring", "Java Framework", true);
+
+        Mockito.when(tutorialRepository.save(tutorial)).thenReturn(Mono.just(tutorial));
+
+        webTestClient.post().uri("/api/tutorial/create")
+                .body(BodyInserters.fromValue(tutorial))
+                .exchange()
+                .expectStatus()
+                .isForbidden();
+    }
+
+    @Test
+    void givenCredentials_whenCreateTutorial_thenOk() {
         Tutorial tutorial = new Tutorial(1L, "Spring", "Java Framework", true);
 
         Mockito.when(tutorialRepository.save(tutorial)).thenReturn(Mono.just(tutorial));
@@ -93,7 +140,29 @@ class TutorialControllerTest {
     }
 
     @Test
-    void createBulkTutorial() {
+    void givenNoCredentials_whenCreateBulkTutorial_thenForbidden() {
+        List<Tutorial> tutorialList = Arrays.asList(
+                new Tutorial(1L, "Spring", "Java Framework", true),
+                new Tutorial(2L, "Django", "Python Framework", true),
+                new Tutorial(3L, "React", "JS Framework", true),
+                new Tutorial(4L, "laravel", "PHP Framework", true)
+        );
+
+        Mockito.when(tutorialRepository.save(ArgumentMatchers.any(Tutorial.class)))
+                .thenAnswer(invocation -> {
+                    Tutorial tutorial = invocation.getArgument(0);
+                    return Mono.just(tutorial);
+                });
+
+        webTestClient.post().uri("/api/tutorial/bulk/create")
+                .body(BodyInserters.fromValue(tutorialList))
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+
+    @Test
+    void givenCredentials_whenCreateBulkTutorial_thenOk() {
         List<Tutorial> tutorialList = Arrays.asList(
                 new Tutorial(1L, "Spring", "Java Framework", true),
                 new Tutorial(2L, "Django", "Python Framework", true),
@@ -115,7 +184,7 @@ class TutorialControllerTest {
     }
 
     @Test
-    void updateTutorial() {
+    void givenCredentials_whenUpdateTutorial_thenOk() {
         Tutorial tutorial = new Tutorial(1L, "Spring", "Java Framework", true);
 
         Mockito.when(tutorialRepository.findById(1L))
@@ -133,7 +202,24 @@ class TutorialControllerTest {
     }
 
     @Test
-    void deleteAllTutorials() {
+    void givenNoCredentials_whenUpdateTutorial_thenForbidden() {
+        Tutorial tutorial = new Tutorial(1L, "Spring", "Java Framework", true);
+
+        Mockito.when(tutorialRepository.findById(1L))
+                .thenReturn(Mono.just(tutorial));
+
+        Mockito.when(tutorialRepository.save(tutorial))
+                .thenReturn(Mono.just(tutorial));
+
+        tutorial.setDescription("Java RX");
+        webTestClient.put().uri("/api/tutorial/update/1")
+                .body(BodyInserters.fromValue(tutorial))
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    void givenCredentials_whenDeleteAllTutorials_thenOk() {
         List<Tutorial> tutorialList = Arrays.asList(
                 new Tutorial(1L, "Spring", "Java Framework", true),
                 new Tutorial(2L, "Django", "Python Framework", true),
@@ -151,8 +237,26 @@ class TutorialControllerTest {
                 .isEmpty();
     }
 
+
     @Test
-    void deleteTutorial() {
+    void givenNoCredentials_whenDeleteAllTutorials_thenForbidden() {
+        List<Tutorial> tutorialList = Arrays.asList(
+                new Tutorial(1L, "Spring", "Java Framework", true),
+                new Tutorial(2L, "Django", "Python Framework", true),
+                new Tutorial(3L, "React", "JS Framework", true),
+                new Tutorial(4L, "laravel", "PHP Framework", true)
+        );
+
+        Mockito.when(tutorialRepository.deleteAll())
+                .thenReturn(Mono.empty());
+
+        webTestClient.delete().uri("/api/tutorial/delete/1")
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    void givenCredentials_whenDeleteTutorial_thenOk() {
         List<Tutorial> tutorialList = Arrays.asList(
                 new Tutorial(1L, "Spring", "Java Framework", true),
                 new Tutorial(2L, "Django", "Python Framework", true),
@@ -175,5 +279,29 @@ class TutorialControllerTest {
                 .expectStatus().isNoContent()
                 .expectBody()
                 .isEmpty();
+    }
+
+    @Test
+    void givenNoCredentials_whenDeleteTutorial_thenForbidden() {
+        List<Tutorial> tutorialList = Arrays.asList(
+                new Tutorial(1L, "Spring", "Java Framework", true),
+                new Tutorial(2L, "Django", "Python Framework", true),
+                new Tutorial(3L, "React", "JS Framework", true),
+                new Tutorial(4L, "laravel", "PHP Framework", true)
+        );
+
+        Mockito.when(tutorialRepository.deleteById(ArgumentMatchers.anyLong()))
+                .thenAnswer(invocation -> {
+                    assertTrue((long)invocation.getArgument(0) >= 1 && (long)invocation.getArgument(0) <= (long) tutorialList.size());
+
+                    Tutorial removedTutorial = tutorialList.remove((int)invocation.getArgument(0)-1);
+                    assertEquals(removedTutorial.getId(), (long)invocation.getArgument(0)-1);
+
+                    return Mono.empty();
+                });
+
+        webTestClient.delete().uri("/api/tutorial/delete")
+                .exchange()
+                .expectStatus().isForbidden();
     }
 }

@@ -1,1 +1,3 @@
 CREATE TABLE IF NOT EXISTS tutorial (id INT NOT NULL AUTO_INCREMENT, title VARCHAR(255), description VARCHAR(255), published BOOLEAN, PRIMARY KEY (id));
+--drop table user_;
+CREATE TABLE IF NOT EXISTS user_ (uid INT NOT NULL AUTO_INCREMENT, username VARCHAR(255), password VARCHAR(255), mobile_number VARCHAR(255), email VARCHAR(255), role VARCHAR(255), PRIMARY KEY (uid));

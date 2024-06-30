@@ -37,7 +37,8 @@ class TutorialRepositoryTest {
                     assertThat(savedTutorial.getTitle()).isEqualTo(newTutorial.getTitle());
                     assertThat(savedTutorial.getDescription()).isEqualTo(newTutorial.getDescription());
                     assertThat(savedTutorial.isPublished()).isEqualTo(newTutorial.isPublished());
-                });
+                })
+                .verifyComplete();
     }
 
 
